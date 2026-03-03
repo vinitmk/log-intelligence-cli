@@ -1,0 +1,6 @@
+anthropic
+pydantic
+python-dotenv
+langsmith
+rich
+click

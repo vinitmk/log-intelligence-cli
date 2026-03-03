@@ -1,0 +1,26 @@
+# Sample log lines for testing log-intelligence-cli
+# Each non-blank, non-comment line is treated as one log entry.
+
+# 1. Java application error with stack trace
+2024-01-15 10:23:45.123 ERROR [order-service] java.lang.NullPointerException: Cannot invoke method getId() on null object at com.example.OrderService.processOrder(OrderService.java:142)
+
+# 2. Nginx access log (combined format)
+192.168.1.50 - frank [10/Oct/2024:13:55:36 -0700] "GET /api/v1/users HTTP/1.1" 200 1234 0.042
+
+# 3. Kafka consumer warning (group rebalance)
+WARN  [kafka-consumer-thread-1] org.apache.kafka.clients.consumer.internals.ConsumerCoordinator - Auto offset commit failed for group payment-processors: Commit cannot be completed since the group has already rebalanced
+
+# 4. Go runtime panic
+goroutine 1 [running]: main.processRequest(0xc0001a4000, 0x7f3b2c000000, 0x400) panic: runtime error: index out of range [5] with length 3
+
+# 5. Linux kernel OOM killer
+Jan 15 10:30:01 prod-server-01 kernel: Out of memory: Kill process 12847 (java) score 987 or sacrifice child
+
+# 6. Structured JSON log (already has fields but test parsing)
+{"timestamp":"2024-01-15T10:45:00Z","level":"error","service":"auth-service","message":"Token validation failed","user_id":"u-8821","error":"invalid signature","request_id":"req-abc123"}
+
+# 7. Traditional syslog format
+Jan 15 11:02:33 web-01 nginx[1337]: 2024/01/15 11:02:33 [crit] 1337#0: *42 connect() to unix:/var/run/php-fpm.sock failed (11: Resource temporarily unavailable) while connecting to upstream
+
+# 8. Health-check / heartbeat log
+2024-01-15T12:00:00.000Z INFO  health-checker service=api-gateway status=healthy latency_ms=3.2 checks_passed=5 checks_failed=0
