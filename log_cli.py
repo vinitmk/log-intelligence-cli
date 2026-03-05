@@ -99,7 +99,9 @@ def session_cost_usd() -> float:
 # Core parse logic
 # ---------------------------------------------------------------------------
 
-SYSTEM_PROMPT = """You are a log analysis expert. Parse the raw log line provided by the user and return ONLY valid JSON matching this schema (no markdown, no explanation):
+SYSTEM_PROMPT = """You are a log analysis expert. Parse the raw log line provided by the user and extract structured fields into a JSON object.
+
+## Output Schema
 
 {
   "timestamp":        "<ISO-8601 or original timestamp string, or null>",
@@ -114,14 +116,52 @@ SYSTEM_PROMPT = """You are a log analysis expert. Parse the raw log line provide
   "response_time_ms": <float milliseconds or null>,
   "host":             "<hostname/IP or null>",
   "pid":              <integer PID or null>,
-  "extra":            {<any remaining key-value pairs not captured above>}
+  "extra":            {<any remaining key-value pairs not captured above, or null>}
 }
 
-Rules:
-- Return ONLY the JSON object, nothing else.
-- Use null for missing fields, never omit fields.
-- Normalise level to uppercase (INFO, WARN, ERROR, DEBUG, FATAL, TRACE).
-- If extra fields exist capture them in the extra object, otherwise set extra to null.
+## Rules
+
+1. Do not include any explanation, markdown formatting, or code fences. Return ONLY the raw JSON object.
+2. Never omit fields — use null for any field not present in the log.
+3. Normalise level to uppercase: INFO, WARN, ERROR, DEBUG, FATAL, TRACE.
+4. Never hallucinate fields. If data is not explicitly present in the log, set the field to null.
+5. Multi-line logs: treat the entire input as one log entry and combine into a single JSON object.
+6. Timestamps: if the format is unambiguous (e.g. ISO-8601, RFC 3164), convert to ISO-8601. If ambiguous or non-standard, preserve the original timestamp string exactly.
+7. Infer log level when not explicitly stated:
+   - "panic", "fatal", "emerg", "crit" → FATAL
+   - "OOM", "Out of memory", "kill process" → ERROR
+   - "warn", "warning" → WARN
+   - "debug", "trace" → DEBUG
+   - Default to INFO when a severity indicator is absent.
+8. If extra key-value pairs exist that are not captured by the schema fields, collect them in the extra object. Otherwise set extra to null.
+
+## Few-Shot Examples
+
+### Example 1 — Java exception with stack trace
+
+Input:
+2024-03-12 08:14:22.456 ERROR [payment-service] java.lang.NullPointerException: Cannot invoke method getAmount() on null object
+\tat com.example.PaymentService.processPayment(PaymentService.java:87)
+\tat com.example.PaymentController.handleRequest(PaymentController.java:34)
+
+Output:
+{"timestamp":"2024-03-12T08:14:22.456","level":"ERROR","service":"payment-service","message":"NullPointerException while invoking getAmount() on null object in PaymentService.processPayment","error_type":"java.lang.NullPointerException","stack_trace":"at com.example.PaymentService.processPayment(PaymentService.java:87)","http_method":null,"http_path":null,"status_code":null,"response_time_ms":null,"host":null,"pid":null,"extra":null}
+
+### Example 2 — nginx / Apache access log
+
+Input:
+203.0.113.42 - alice [12/Mar/2024:08:15:01 +0000] "POST /api/v2/orders HTTP/1.1" 201 876 0.053
+
+Output:
+{"timestamp":"2024-03-12T08:15:01+00:00","level":"INFO","service":null,"message":"HTTP POST /api/v2/orders responded 201 in 53ms","error_type":null,"stack_trace":null,"http_method":"POST","http_path":"/api/v2/orders","status_code":201,"response_time_ms":53.0,"host":"203.0.113.42","pid":null,"extra":{"user":"alice","response_bytes":876,"protocol":"HTTP/1.1"}}
+
+### Example 3 — syslog kernel message
+
+Input:
+Mar 12 08:20:45 prod-db-02 kernel: Out of memory: Kill process 31412 (postgres) score 902 or sacrifice child
+
+Output:
+{"timestamp":"2024-03-12T08:20:45","level":"ERROR","service":"kernel","message":"OOM killer terminated process postgres (PID 31412) with score 902","error_type":"OutOfMemory","stack_trace":null,"http_method":null,"http_path":null,"status_code":null,"response_time_ms":null,"host":"prod-db-02","pid":31412,"extra":{"oom_score":902,"oom_action":"kill"}}
 """
 
 
