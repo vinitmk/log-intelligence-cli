@@ -60,6 +60,21 @@ python log_cli.py demo
 
 ---
 
+## Parsing Intelligence
+
+The prompt is engineered for accuracy across a wide range of log formats:
+
+- **Few-shot examples** — Java exceptions, nginx/Apache access logs, and syslog kernel messages are embedded directly in the system prompt to guide consistent extraction
+- **Level inference** — severity is inferred when not explicit (`panic` → `FATAL`, `OOM` → `ERROR`, `warn` → `WARN`)
+- **Timestamp normalisation** — unambiguous formats (ISO-8601, RFC 3164) are converted to ISO-8601; ambiguous formats are preserved as-is
+- **Multi-line logs** — treated as a single entry
+- **No hallucination** — fields absent from the log are always `null`, never guessed
+- **Overflow into `extra`** — any key-value pairs not covered by the schema (user ID, request ID, OOM score, etc.) are captured in the `extra` object
+
+Supported log formats include Java/JVM exceptions, nginx/Apache access logs, syslog, structured JSON logs, Go panics, Kafka consumer logs, and key=value structured logs.
+
+---
+
 ## Cost
 
 Runs on `claude-sonnet-4-6` — $3/M input tokens, $15/M output tokens. A 5-log demo run costs roughly $0.02. Use `cost-report` to track session spend.
