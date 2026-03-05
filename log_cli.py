@@ -15,6 +15,7 @@ import click
 from dotenv import load_dotenv
 from pydantic import BaseModel, ValidationError, field_validator
 from rich.console import Console
+from rich.markup import escape
 from rich.panel import Panel
 from rich.progress import Progress, SpinnerColumn, TextColumn
 from rich.syntax import Syntax
@@ -219,9 +220,9 @@ def get_client() -> anthropic.Anthropic:
 
 
 def render_result(raw_log: str, parsed: ParsedLog, usage: dict) -> None:
-    console.print(Panel(f"[dim]{raw_log}[/dim]", title="Raw Log", border_style="blue"))
+    console.print(Panel(f"[dim]{escape(raw_log)}[/dim]", title="Raw Log", border_style="blue"))
     json_str = parsed.model_dump_json(indent=2, exclude_none=True)
-    console.print(Syntax(json_str, "json", theme="monokai", line_numbers=False))
+    console.print(Syntax(json_str, "json", theme="monokai", line_numbers=False, word_wrap=True))
     console.print(
         f"[dim]Tokens: {usage['input_tokens']} in / {usage['output_tokens']} out  "
         f"| Cost: ${usage['cost_usd']:.6f}[/dim]\n"
