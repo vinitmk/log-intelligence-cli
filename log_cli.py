@@ -5,6 +5,7 @@ Parses raw log lines into structured JSON using the Anthropic API.
 
 import json
 import os
+import re
 import sys
 import time
 from pathlib import Path
@@ -94,6 +95,51 @@ def session_cost_usd() -> float:
         _session_output_tokens / 1_000_000 * COST_PER_MILLION_OUTPUT,
         6,
     )
+
+
+# ---------------------------------------------------------------------------
+# Edge-case helpers
+# ---------------------------------------------------------------------------
+
+MAX_LOG_CHARS = 2000
+
+# Patterns that indicate the start of a new log entry.
+_NEW_ENTRY_RE = re.compile(
+    r'^('
+    r'\d{4}[-/]\d{2}[-/]\d{2}'            # ISO date: 2024-01-15
+    r'|(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s+\d'  # syslog date
+    r'|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}'  # IPv4
+    r'|(?:ERROR|WARN(?:ING)?|INFO|DEBUG|FATAL|TRACE|CRITICAL)\b'  # bare level
+    r'|\{'                                  # JSON object
+    r'|goroutine\s+\d+'                    # Go goroutine dump
+    r')',
+    re.IGNORECASE,
+)
+
+
+def is_new_log_entry(line: str) -> bool:
+    return bool(_NEW_ENTRY_RE.match(line))
+
+
+def merge_continuation_lines(lines: list[str]) -> list[str]:
+    """Merge stack-trace / continuation lines into their parent log entry."""
+    if not lines:
+        return []
+    merged: list[str] = [lines[0]]
+    for line in lines[1:]:
+        if is_new_log_entry(line):
+            merged.append(line)
+        else:
+            merged[-1] = merged[-1] + "\n" + line
+    return merged
+
+
+def truncate_log(raw: str) -> tuple[str, bool]:
+    """Return (text, was_truncated). Caps at MAX_LOG_CHARS with a note."""
+    if len(raw) <= MAX_LOG_CHARS:
+        return raw, False
+    truncated = raw[:MAX_LOG_CHARS] + f"\n... [truncated {len(raw) - MAX_LOG_CHARS} chars]"
+    return truncated, True
 
 
 # ---------------------------------------------------------------------------
@@ -253,34 +299,83 @@ def parse(log_line: str):
 @click.argument("file", type=click.Path(exists=True, readable=True, path_type=Path))
 @click.option("--output", "-o", type=click.Path(path_type=Path), default=None,
               help="Write all parsed results to this JSON file.")
-def batch(file: Path, output: Optional[Path]):
-    """Parse every line in FILE into structured JSON."""
-    client  = get_client()
-    lines   = [l.strip() for l in file.read_text().splitlines() if l.strip() and not l.startswith("#")]
-    results = []
+@click.option("--skip-errors", is_flag=True, default=False,
+              help="Silently skip entries that fail to parse instead of recording errors.")
+def batch(file: Path, output: Optional[Path], skip_errors: bool):
+    """Parse every log entry in FILE into structured JSON.
 
-    console.print(f"[bold]Batch parsing [cyan]{len(lines)}[/cyan] log lines from [cyan]{file}[/cyan]…[/bold]\n")
+    Continuation lines (stack traces, etc.) are automatically merged with
+    the preceding log entry before parsing.
+    """
+    client = get_client()
+
+    # --- read & pre-process ------------------------------------------------
+    raw_lines = [l.rstrip() for l in file.read_text().splitlines()]
+    raw_lines = [l for l in raw_lines if l.strip() and not l.strip().startswith("#")]
+
+    if not raw_lines:
+        console.print("[yellow]No log entries found in file.[/yellow]")
+        return
+
+    entries = merge_continuation_lines(raw_lines)
+
+    # Warn about any entries that are empty (defensive)
+    entries = [e for e in entries if e.strip()]
+
+    console.print(
+        f"[bold]Batch parsing [cyan]{len(entries)}[/cyan] log entr"
+        f"{'y' if len(entries) == 1 else 'ies'} from [cyan]{file}[/cyan]"
+        f"{' (multi-line merging applied)' if len(entries) < len(raw_lines) else ''}…[/bold]\n"
+    )
+
+    results: list[dict] = []
+    skipped = 0
 
     with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}")) as progress:
-        task = progress.add_task("Parsing…", total=len(lines))
-        for i, line in enumerate(lines, 1):
-            progress.update(task, description=f"Line {i}/{len(lines)}…")
+        task = progress.add_task("Parsing…", total=len(entries))
+        for i, entry in enumerate(entries, 1):
+            progress.update(task, description=f"Entry {i}/{len(entries)}…")
+
+            # Truncate if needed
+            log_text, was_truncated = truncate_log(entry)
+            if was_truncated:
+                console.print(
+                    f"  [yellow]Entry {i}: truncated from {len(entry)} → {MAX_LOG_CHARS} chars[/yellow]"
+                )
+
             try:
-                parsed, usage = call_api(line, client)
-                results.append({"raw": line, "parsed": parsed.model_dump(exclude_none=True), "usage": usage})
-                progress.advance(task)
-            except RuntimeError as exc:
-                console.print(f"[red]Line {i} failed:[/red] {exc}")
-                results.append({"raw": line, "error": str(exc)})
+                parsed, usage = call_api(log_text, client)
+                record: dict = {
+                    "raw": entry,
+                    "parsed": parsed.model_dump(exclude_none=True),
+                    "usage": usage,
+                }
+                if was_truncated:
+                    record["truncated"] = True
+                results.append(record)
+            except Exception as exc:  # noqa: BLE001
+                if skip_errors:
+                    skipped += 1
+                else:
+                    console.print(f"[red]Entry {i} failed:[/red] {exc}")
+                    results.append({"raw": entry, "error": str(exc)})
+            finally:
                 progress.advance(task)
 
-    console.print(f"\n[green]Done.[/green] Parsed {len(results)} lines.\n")
+    success = sum(1 for r in results if "parsed" in r)
+    fail    = sum(1 for r in results if "error"  in r)
+    summary = f"[green]Done.[/green] {success} parsed"
+    if fail:
+        summary += f", [red]{fail} failed[/red]"
+    if skipped:
+        summary += f", [yellow]{skipped} skipped[/yellow]"
+    console.print(f"\n{summary}.\n")
 
     for r in results:
         if "parsed" in r:
             render_result(r["raw"], ParsedLog(**r["parsed"]), r["usage"])
         else:
-            console.print(f"[red]Failed:[/red] {r['raw']}\n  {r['error']}\n")
+            console.print(f"[red]Failed:[/red] {escape(r['raw'][:120])}\n  {r['error']}\n")
 
     if output:
         output.write_text(json.dumps(results, indent=2))
@@ -330,6 +425,18 @@ def _print_session_cost():
     table.add_row("Total tokens",    f"{_session_input_tokens + _session_output_tokens:,}")
     table.add_row("Estimated cost",  f"${session_cost_usd():.6f}")
     console.print(table)
+
+
+@cli.command("eval")
+@click.option("--output", "-o", type=click.Path(path_type=Path),
+              default=Path("eval_results.json"),
+              show_default=True,
+              help="Where to write JSON results.")
+def eval_cmd(output: Path):
+    """Run the eval harness against the ground-truth dataset and print a score report."""
+    from eval_harness import run_eval  # local import to avoid circular deps at startup
+    client = get_client()
+    run_eval(client, output_path=output)
 
 
 if __name__ == "__main__":

@@ -1,0 +1,451 @@
+{
+  "run_at": "2026-03-15T22:23:02.751845+00:00",
+  "model": "claude-sonnet-4-6",
+  "n_entries": 10,
+  "aggregate": {
+    "json_valid_pct": 1.0,
+    "avg_field_accuracy": 1.0,
+    "avg_completeness": 1.0,
+    "level_correct_pct": 1.0,
+    "avg_metadata_extraction": 0.933
+  },
+  "entries": [
+    {
+      "id": "java-npe",
+      "raw": "2024-01-15 10:23:45.123 ERROR [order-service] java.lang.NullPointerException: Cannot invoke method getId() on null object at com.example.OrderService.processOrder(OrderService.java:142)",
+      "expected": {
+        "level": "ERROR",
+        "service": "order-service",
+        "error_type": "java.lang.NullPointerException",
+        "stack_trace": "at com.example.OrderService.processOrder(OrderService.java:142)",
+        "http_method": null,
+        "status_code": null,
+        "extra": null
+      },
+      "parsed": {
+        "timestamp": "2024-01-15T10:23:45.123",
+        "level": "ERROR",
+        "service": "order-service",
+        "message": "NullPointerException while invoking getId() on null object in OrderService.processOrder",
+        "error_type": "java.lang.NullPointerException",
+        "stack_trace": "at com.example.OrderService.processOrder(OrderService.java:142)",
+        "http_method": null,
+        "http_path": null,
+        "status_code": null,
+        "response_time_ms": null,
+        "host": null,
+        "pid": null,
+        "extra": null
+      },
+      "scores": {
+        "json_valid": true,
+        "field_accuracy": 1.0,
+        "completeness": 1.0,
+        "level_correct": true,
+        "metadata_extraction": null
+      },
+      "usage": {
+        "input_tokens": 1220,
+        "output_tokens": 128,
+        "cost_usd": 0.00558
+      }
+    },
+    {
+      "id": "nginx-access",
+      "raw": "192.168.1.50 - frank [10/Oct/2024:13:55:36 -0700] \"GET /api/v1/users HTTP/1.1\" 200 1234 0.042",
+      "expected": {
+        "level": "INFO",
+        "http_method": "GET",
+        "http_path": "/api/v1/users",
+        "status_code": 200,
+        "response_time_ms": 42.0,
+        "host": "192.168.1.50",
+        "extra": {
+          "user": "frank"
+        }
+      },
+      "parsed": {
+        "timestamp": "2024-10-10T13:55:36-07:00",
+        "level": "INFO",
+        "service": null,
+        "message": "HTTP GET /api/v1/users responded 200 in 42ms",
+        "error_type": null,
+        "stack_trace": null,
+        "http_method": "GET",
+        "http_path": "/api/v1/users",
+        "status_code": 200,
+        "response_time_ms": 42.0,
+        "host": "192.168.1.50",
+        "pid": null,
+        "extra": {
+          "user": "frank",
+          "response_bytes": 1234,
+          "protocol": "HTTP/1.1"
+        }
+      },
+      "scores": {
+        "json_valid": true,
+        "field_accuracy": 1.0,
+        "completeness": 1.0,
+        "level_correct": true,
+        "metadata_extraction": 1.0
+      },
+      "usage": {
+        "input_tokens": 1215,
+        "output_tokens": 134,
+        "cost_usd": 0.005655
+      }
+    },
+    {
+      "id": "kafka-warn",
+      "raw": "WARN  [kafka-consumer-thread-1] org.apache.kafka.clients.consumer.internals.ConsumerCoordinator - Auto offset commit failed for group payment-processors: Commit cannot be completed since the group has already rebalanced",
+      "expected": {
+        "level": "WARN",
+        "service": "ConsumerCoordinator",
+        "error_type": null,
+        "http_method": null,
+        "status_code": null,
+        "extra": null
+      },
+      "parsed": {
+        "timestamp": null,
+        "level": "WARN",
+        "service": "kafka-consumer-thread-1",
+        "message": "Auto offset commit failed for consumer group 'payment-processors' because the group rebalanced before commit could complete",
+        "error_type": null,
+        "stack_trace": null,
+        "http_method": null,
+        "http_path": null,
+        "status_code": null,
+        "response_time_ms": null,
+        "host": null,
+        "pid": null,
+        "extra": {
+          "logger": "org.apache.kafka.clients.consumer.internals.ConsumerCoordinator",
+          "consumer_group": "payment-processors",
+          "failure_reason": "Commit cannot be completed since the group has already rebalanced"
+        }
+      },
+      "scores": {
+        "json_valid": true,
+        "field_accuracy": 1.0,
+        "completeness": 1.0,
+        "level_correct": true,
+        "metadata_extraction": null
+      },
+      "usage": {
+        "input_tokens": 1216,
+        "output_tokens": 146,
+        "cost_usd": 0.005838
+      }
+    },
+    {
+      "id": "go-panic",
+      "raw": "goroutine 1 [running]: main.processRequest(0xc0001a4000, 0x7f3b2c000000, 0x400) panic: runtime error: index out of range [5] with length 3",
+      "expected": {
+        "level": "FATAL",
+        "error_type": "panic",
+        "http_method": null,
+        "status_code": null
+      },
+      "parsed": {
+        "timestamp": null,
+        "level": "FATAL",
+        "service": null,
+        "message": "Panic in main.processRequest due to runtime error: index out of range [5] with length 3",
+        "error_type": "runtime error: index out of range",
+        "stack_trace": "goroutine 1 [running]: main.processRequest(0xc0001a4000, 0x7f3b2c000000, 0x400)",
+        "http_method": null,
+        "http_path": null,
+        "status_code": null,
+        "response_time_ms": null,
+        "host": null,
+        "pid": null,
+        "extra": {
+          "goroutine_id": 1,
+          "goroutine_state": "running",
+          "panic_detail": "index out of range [5] with length 3",
+          "function": "main.processRequest",
+          "args": "0xc0001a4000, 0x7f3b2c000000, 0x400"
+        }
+      },
+      "scores": {
+        "json_valid": true,
+        "field_accuracy": 1.0,
+        "completeness": 1.0,
+        "level_correct": true,
+        "metadata_extraction": null
+      },
+      "usage": {
+        "input_tokens": 1218,
+        "output_tokens": 205,
+        "cost_usd": 0.006729
+      }
+    },
+    {
+      "id": "linux-oom",
+      "raw": "Jan 15 10:30:01 prod-server-01 kernel: Out of memory: Kill process 12847 (java) score 987 or sacrifice child",
+      "expected": {
+        "level": "ERROR",
+        "service": "kernel",
+        "host": "prod-server-01",
+        "pid": 12847,
+        "error_type": "OutOfMemory",
+        "extra": {
+          "oom_score": 987
+        }
+      },
+      "parsed": {
+        "timestamp": "2024-01-15T10:30:01",
+        "level": "ERROR",
+        "service": "kernel",
+        "message": "OOM killer terminated process java (PID 12847) with score 987",
+        "error_type": "OutOfMemory",
+        "stack_trace": null,
+        "http_method": null,
+        "http_path": null,
+        "status_code": null,
+        "response_time_ms": null,
+        "host": "prod-server-01",
+        "pid": 12847,
+        "extra": {
+          "oom_score": 987,
+          "oom_action": "kill"
+        }
+      },
+      "scores": {
+        "json_valid": true,
+        "field_accuracy": 1.0,
+        "completeness": 1.0,
+        "level_correct": true,
+        "metadata_extraction": 1.0
+      },
+      "usage": {
+        "input_tokens": 1200,
+        "output_tokens": 119,
+        "cost_usd": 0.005385
+      }
+    },
+    {
+      "id": "json-log",
+      "raw": "{\"timestamp\":\"2024-01-15T10:45:00Z\",\"level\":\"error\",\"service\":\"auth-service\",\"message\":\"Token validation failed\",\"user_id\":\"u-8821\",\"error\":\"invalid signature\",\"request_id\":\"req-abc123\"}",
+      "expected": {
+        "level": "ERROR",
+        "service": "auth-service",
+        "error_type": "invalid signature",
+        "http_method": null,
+        "status_code": null,
+        "extra": {
+          "user_id": "u-8821",
+          "request_id": "req-abc123"
+        }
+      },
+      "parsed": {
+        "timestamp": "2024-01-15T10:45:00Z",
+        "level": "ERROR",
+        "service": "auth-service",
+        "message": "Token validation failed due to invalid signature",
+        "error_type": "invalid signature",
+        "stack_trace": null,
+        "http_method": null,
+        "http_path": null,
+        "status_code": null,
+        "response_time_ms": null,
+        "host": null,
+        "pid": null,
+        "extra": {
+          "user_id": "u-8821",
+          "request_id": "req-abc123"
+        }
+      },
+      "scores": {
+        "json_valid": true,
+        "field_accuracy": 1.0,
+        "completeness": 1.0,
+        "level_correct": true,
+        "metadata_extraction": 1.0
+      },
+      "usage": {
+        "input_tokens": 1218,
+        "output_tokens": 109,
+        "cost_usd": 0.005289
+      }
+    },
+    {
+      "id": "syslog-nginx-crit",
+      "raw": "Jan 15 11:02:33 web-01 nginx[1337]: 2024/01/15 11:02:33 [crit] 1337#0: *42 connect() to unix:/var/run/php-fpm.sock failed (11: Resource temporarily unavailable) while connecting to upstream",
+      "expected": {
+        "level": "FATAL",
+        "host": "web-01",
+        "pid": 1337,
+        "service": "nginx",
+        "http_method": null,
+        "status_code": null
+      },
+      "parsed": {
+        "timestamp": "2024-01-15T11:02:33",
+        "level": "FATAL",
+        "service": "nginx",
+        "message": "connect() to unix:/var/run/php-fpm.sock failed (Resource temporarily unavailable) while connecting to upstream",
+        "error_type": "connect() failed",
+        "stack_trace": null,
+        "http_method": null,
+        "http_path": null,
+        "status_code": null,
+        "response_time_ms": null,
+        "host": "web-01",
+        "pid": 1337,
+        "extra": {
+          "worker_pid": "1337#0",
+          "connection_id": 42,
+          "socket": "/var/run/php-fpm.sock",
+          "errno": 11,
+          "phase": "connecting to upstream"
+        }
+      },
+      "scores": {
+        "json_valid": true,
+        "field_accuracy": 1.0,
+        "completeness": 1.0,
+        "level_correct": true,
+        "metadata_extraction": null
+      },
+      "usage": {
+        "input_tokens": 1236,
+        "output_tokens": 151,
+        "cost_usd": 0.005973
+      }
+    },
+    {
+      "id": "health-check",
+      "raw": "2024-01-15T12:00:00.000Z INFO  health-checker service=api-gateway status=healthy latency_ms=3.2 checks_passed=5 checks_failed=0",
+      "expected": {
+        "level": "INFO",
+        "service": "health-checker",
+        "http_method": null,
+        "status_code": null,
+        "extra": {
+          "service_name": "api-gateway",
+          "checks_passed": 5,
+          "checks_failed": 0
+        }
+      },
+      "parsed": {
+        "timestamp": "2024-01-15T12:00:00.000Z",
+        "level": "INFO",
+        "service": "api-gateway",
+        "message": "Health check passed: all 5 checks healthy, latency 3.2ms",
+        "error_type": null,
+        "stack_trace": null,
+        "http_method": null,
+        "http_path": null,
+        "status_code": null,
+        "response_time_ms": 3.2,
+        "host": null,
+        "pid": null,
+        "extra": {
+          "reporter": "health-checker",
+          "status": "healthy",
+          "checks_passed": 5,
+          "checks_failed": 0
+        }
+      },
+      "scores": {
+        "json_valid": true,
+        "field_accuracy": 1.0,
+        "completeness": 1.0,
+        "level_correct": true,
+        "metadata_extraction": 0.667
+      },
+      "usage": {
+        "input_tokens": 1211,
+        "output_tokens": 126,
+        "cost_usd": 0.005523
+      }
+    },
+    {
+      "id": "python-traceback",
+      "raw": "2024-03-20 14:55:01,234 ERROR root - Unhandled exception in worker\nTraceback (most recent call last):\n  File \"/app/worker.py\", line 88, in run\n    result = process(payload)\n  File \"/app/processor.py\", line 42, in process\n    raise ValueError(f\"Invalid payload: {payload!r}\")\nValueError: Invalid payload: None",
+      "expected": {
+        "level": "ERROR",
+        "error_type": "ValueError",
+        "stack_trace": "File \"/app/processor.py\", line 42, in process",
+        "http_method": null,
+        "status_code": null
+      },
+      "parsed": {
+        "timestamp": "2024-03-20T14:55:01.234",
+        "level": "ERROR",
+        "service": "root",
+        "message": "Unhandled exception in worker: Invalid payload: None",
+        "error_type": "ValueError",
+        "stack_trace": "File \"/app/worker.py\", line 88, in run",
+        "http_method": null,
+        "http_path": null,
+        "status_code": null,
+        "response_time_ms": null,
+        "host": null,
+        "pid": null,
+        "extra": null
+      },
+      "scores": {
+        "json_valid": true,
+        "field_accuracy": 1.0,
+        "completeness": 1.0,
+        "level_correct": true,
+        "metadata_extraction": null
+      },
+      "usage": {
+        "input_tokens": 1260,
+        "output_tokens": 109,
+        "cost_usd": 0.005415
+      }
+    },
+    {
+      "id": "docker-request",
+      "raw": "2024-01-15T15:30:00.500Z ERROR api-gateway msg=\"upstream timeout\" request_id=req-xyz999 method=POST path=/v1/checkout upstream=payment-service duration_ms=30001 status=504",
+      "expected": {
+        "level": "ERROR",
+        "service": "api-gateway",
+        "http_method": "POST",
+        "http_path": "/v1/checkout",
+        "status_code": 504,
+        "response_time_ms": 30001.0,
+        "extra": {
+          "request_id": "req-xyz999",
+          "upstream": "payment-service"
+        }
+      },
+      "parsed": {
+        "timestamp": "2024-01-15T15:30:00.500Z",
+        "level": "ERROR",
+        "service": "api-gateway",
+        "message": "Upstream timeout on POST /v1/checkout to payment-service after 30001ms, responded 504",
+        "error_type": "UpstreamTimeout",
+        "stack_trace": null,
+        "http_method": "POST",
+        "http_path": "/v1/checkout",
+        "status_code": 504,
+        "response_time_ms": 30001.0,
+        "host": null,
+        "pid": null,
+        "extra": {
+          "request_id": "req-xyz999",
+          "upstream": "payment-service"
+        }
+      },
+      "scores": {
+        "json_valid": true,
+        "field_accuracy": 1.0,
+        "completeness": 1.0,
+        "level_correct": true,
+        "metadata_extraction": 1.0
+      },
+      "usage": {
+        "input_tokens": 1220,
+        "output_tokens": 134,
+        "cost_usd": 0.00567
+      }
+    }
+  ]
+}
