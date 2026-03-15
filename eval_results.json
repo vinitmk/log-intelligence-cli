@@ -1,5 +1,5 @@
 {
-  "run_at": "2026-03-15T22:23:02.751845+00:00",
+  "run_at": "2026-03-15T22:28:38.326197+00:00",
   "model": "claude-sonnet-4-6",
   "n_entries": 10,
   "aggregate": {
@@ -7,7 +7,7 @@
     "avg_field_accuracy": 1.0,
     "avg_completeness": 1.0,
     "level_correct_pct": 1.0,
-    "avg_metadata_extraction": 0.933
+    "avg_metadata_extraction": 1.0
   },
   "entries": [
     {
@@ -111,7 +111,7 @@
         "timestamp": null,
         "level": "WARN",
         "service": "kafka-consumer-thread-1",
-        "message": "Auto offset commit failed for consumer group 'payment-processors' because the group rebalanced before commit could complete",
+        "message": "Auto offset commit failed for group payment-processors: group has already rebalanced",
         "error_type": null,
         "stack_trace": null,
         "http_method": null,
@@ -135,8 +135,8 @@
       },
       "usage": {
         "input_tokens": 1216,
-        "output_tokens": 146,
-        "cost_usd": 0.005838
+        "output_tokens": 139,
+        "cost_usd": 0.005733
       }
     },
     {
@@ -151,8 +151,8 @@
       "parsed": {
         "timestamp": null,
         "level": "FATAL",
-        "service": null,
-        "message": "Panic in main.processRequest due to runtime error: index out of range [5] with length 3",
+        "service": "main",
+        "message": "Panic due to runtime error: index out of range [5] with length 3 in main.processRequest",
         "error_type": "runtime error: index out of range",
         "stack_trace": "goroutine 1 [running]: main.processRequest(0xc0001a4000, 0x7f3b2c000000, 0x400)",
         "http_method": null,
@@ -164,9 +164,9 @@
         "extra": {
           "goroutine_id": 1,
           "goroutine_state": "running",
-          "panic_detail": "index out of range [5] with length 3",
-          "function": "main.processRequest",
-          "args": "0xc0001a4000, 0x7f3b2c000000, 0x400"
+          "index_accessed": 5,
+          "slice_length": 3,
+          "panic_args": "0xc0001a4000, 0x7f3b2c000000, 0x400"
         }
       },
       "scores": {
@@ -178,8 +178,8 @@
       },
       "usage": {
         "input_tokens": 1218,
-        "output_tokens": 205,
-        "cost_usd": 0.006729
+        "output_tokens": 197,
+        "cost_usd": 0.006609
       }
     },
     {
@@ -286,7 +286,7 @@
         "timestamp": "2024-01-15T11:02:33",
         "level": "FATAL",
         "service": "nginx",
-        "message": "connect() to unix:/var/run/php-fpm.sock failed (Resource temporarily unavailable) while connecting to upstream",
+        "message": "Failed to connect to PHP-FPM upstream socket: Resource temporarily unavailable",
         "error_type": "connect() failed",
         "stack_trace": null,
         "http_method": null,
@@ -296,11 +296,13 @@
         "host": "web-01",
         "pid": 1337,
         "extra": {
-          "worker_pid": "1337#0",
+          "worker_id": "1337#0",
           "connection_id": 42,
-          "socket": "/var/run/php-fpm.sock",
+          "upstream_socket": "/var/run/php-fpm.sock",
+          "syscall": "connect()",
           "errno": 11,
-          "phase": "connecting to upstream"
+          "error_detail": "Resource temporarily unavailable",
+          "context": "while connecting to upstream"
         }
       },
       "scores": {
@@ -312,8 +314,8 @@
       },
       "usage": {
         "input_tokens": 1236,
-        "output_tokens": 151,
-        "cost_usd": 0.005973
+        "output_tokens": 159,
+        "cost_usd": 0.006093
       }
     },
     {
@@ -325,7 +327,7 @@
         "http_method": null,
         "status_code": null,
         "extra": {
-          "service_name": "api-gateway",
+          "status": "healthy",
           "checks_passed": 5,
           "checks_failed": 0
         }
@@ -334,7 +336,7 @@
         "timestamp": "2024-01-15T12:00:00.000Z",
         "level": "INFO",
         "service": "api-gateway",
-        "message": "Health check passed: all 5 checks healthy, latency 3.2ms",
+        "message": "Health check passed: all 5 checks healthy with 3.2ms latency",
         "error_type": null,
         "stack_trace": null,
         "http_method": null,
@@ -344,7 +346,7 @@
         "host": null,
         "pid": null,
         "extra": {
-          "reporter": "health-checker",
+          "checker": "health-checker",
           "status": "healthy",
           "checks_passed": 5,
           "checks_failed": 0
@@ -355,7 +357,7 @@
         "field_accuracy": 1.0,
         "completeness": 1.0,
         "level_correct": true,
-        "metadata_extraction": 0.667
+        "metadata_extraction": 1.0
       },
       "usage": {
         "input_tokens": 1211,
@@ -386,7 +388,9 @@
         "response_time_ms": null,
         "host": null,
         "pid": null,
-        "extra": null
+        "extra": {
+          "traceback": "File \"/app/worker.py\", line 88, in run\n    result = process(payload)\n  File \"/app/processor.py\", line 42, in process\n    raise ValueError(f\"Invalid payload: {payload!r}\")\nValueError: Invalid payload: None"
+        }
       },
       "scores": {
         "json_valid": true,
@@ -397,8 +401,8 @@
       },
       "usage": {
         "input_tokens": 1260,
-        "output_tokens": 109,
-        "cost_usd": 0.005415
+        "output_tokens": 182,
+        "cost_usd": 0.00651
       }
     },
     {
@@ -420,7 +424,7 @@
         "timestamp": "2024-01-15T15:30:00.500Z",
         "level": "ERROR",
         "service": "api-gateway",
-        "message": "Upstream timeout on POST /v1/checkout to payment-service after 30001ms, responded 504",
+        "message": "Upstream timeout on POST /v1/checkout to payment-service after 30001ms",
         "error_type": "UpstreamTimeout",
         "stack_trace": null,
         "http_method": "POST",
@@ -443,8 +447,8 @@
       },
       "usage": {
         "input_tokens": 1220,
-        "output_tokens": 134,
-        "cost_usd": 0.00567
+        "output_tokens": 130,
+        "cost_usd": 0.00561
       }
     }
   ]

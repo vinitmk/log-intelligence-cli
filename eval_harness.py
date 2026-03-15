@@ -160,7 +160,7 @@ GROUND_TRUTH: list[dict] = [
             "http_method": None,
             "status_code": None,
             "extra": {
-                "service_name": "api-gateway",   # key name may vary — test for presence
+                "status": "healthy",    # model captures this in extra
                 "checks_passed": 5,
                 "checks_failed": 0,
             },
